@@ -91,6 +91,18 @@
     .panel h2{font-size:17px;margin:0 0 4px}
     .panel p{font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.45}
     .chart-wrap{height:290px;position:relative}
+    .location-panel{
+      width:min(680px,100%);margin:0 auto 14px;padding:14px;
+      background:rgba(16,29,48,.95);border:1px solid var(--line);
+      border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden
+    }
+    .location-panel h2{font-size:17px;margin:0 0 4px}
+    .location-panel p{font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.45}
+    .location-map-wrap{
+      height:230px;overflow:hidden;border:1px solid var(--line);
+      border-radius:14px;background:#0b1627
+    }
+    .location-map{display:block;width:100%;height:100%;border:0;pointer-events:none}
     .note{
       background:rgba(20,36,58,.72);border:1px solid var(--line);border-radius:14px;
       padding:12px 14px;color:var(--muted);font-size:12px;line-height:1.58;margin:14px 0
@@ -119,6 +131,8 @@
       .day{min-height:128px}
       .panel{padding:11px}
       .chart-wrap{height:280px}
+      .location-panel{padding:11px;margin-bottom:12px}
+      .location-map-wrap{height:210px}
       .sub{font-size:13px;line-height:1.4}
     }
   </style>
@@ -128,7 +142,7 @@
   <header>
     <div>
       <h1>Seterbu Værmelding</h1>
-      <div id="locationSub" class="sub">59,70266°N · 6,41297°E · 7 døgn · v1.14 · oppdateres automatisk når siden åpnes</div>
+      <div id="locationSub" class="sub">59,70266°N · 6,41297°E · 7 døgn · v1.15 · oppdateres automatisk når siden åpnes</div>
     </div>
     <div class="actions">
       <button id="refreshBtn" type="button">Oppdater</button>
@@ -226,6 +240,19 @@
           <div id="pressureDetail" class="detail">–</div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="location-panel" aria-label="Lokasjon for Seterbu">
+    <h2>Lokasjon</h2>
+    <p>Seterbu · 59,70266°N · 6,41297°E</p>
+    <div class="location-map-wrap">
+      <iframe
+        class="location-map"
+        title="Kart som viser plasseringen av Seterbu"
+        loading="lazy"
+        src="https://www.openstreetmap.org/export/embed.html?bbox=6.29797%2C59.68291%2C6.52797%2C59.72241&amp;layer=mapnik&amp;marker=59.70266%2C6.41297">
+      </iframe>
     </div>
   </section>
 
@@ -488,7 +515,7 @@
 
     const elevation = Number(data.elevation);
     if(finite(elevation)){
-      $('locationSub').textContent = `59,70266°N · 6,41297°E · ${Math.round(elevation)} moh. · 7 døgn · v1.14 · oppdateres automatisk når siden åpnes`;
+      $('locationSub').textContent = `59,70266°N · 6,41297°E · ${Math.round(elevation)} moh. · 7 døgn · v1.15 · oppdateres automatisk når siden åpnes`;
     }
 
     const sunrise = data.daily?.sunrise?.[0];
