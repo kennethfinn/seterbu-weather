@@ -4,8 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a1220">
-  <meta name="description" content="Automatisk oppdatert MultiModel-værvisualisering for Seterbu.">
-  <title>Seterbu Værmelding</title>
+  <meta name="description" content="Oppdatert værmelding for Seterbu basert på ni værmodeller.">
+  <link rel="canonical" href="https://seterbu.didwell.no/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="nb_NO">
+  <meta property="og:site_name" content="DidWell Vær">
+  <meta property="og:title" content="Seterbu - DidWell Weather Services">
+  <meta property="og:description" content="Oppdatert værmelding for Seterbu basert på ni værmodeller.">
+  <meta property="og:url" content="https://seterbu.didwell.no/">
+  <meta property="og:image" content="https://weather.didwell.no/og-aalgard.jpg?v=1">
+  <meta property="og:image:secure_url" content="https://weather.didwell.no/og-aalgard.jpg?v=1">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Seterbu - DidWell Weather Services – værmelding basert på 9 værmodeller">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Seterbu - DidWell Weather Services">
+  <meta name="twitter:description" content="Oppdatert værmelding for Seterbu basert på ni værmodeller.">
+  <meta name="twitter:image" content="https://weather.didwell.no/og-aalgard.jpg?v=1">
+  <title>Seterbu - DidWell Weather Services</title>
   <style>
     :root{
       color-scheme:dark;
@@ -33,8 +52,8 @@
       -webkit-font-smoothing:antialiased;
     }
     a{color:#92c9ff}
-    .wrap{width:min(1440px,100%);margin:auto;padding:18px}
-    header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin:6px 0 14px;flex-wrap:wrap}
+    .wrap{width:100%;margin:auto;padding:18px}
+    header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin:6px 0 14px}
     h1{font-size:clamp(28px,5vw,48px);line-height:1.02;letter-spacing:-.035em;margin:0}
     .sub{color:var(--muted);font-size:14px;margin-top:8px}
     .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
@@ -52,13 +71,12 @@
       display:none;background:rgba(255,125,138,.09);border:1px solid rgba(255,125,138,.48);
       color:#ffd6da;border-radius:14px;padding:12px 14px;margin:0 0 14px;line-height:1.45
     }
-    .cards{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;margin-bottom:14px}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:12px;margin-bottom:14px}
     .card,.panel,.day{
-      background:rgba(16,29,48,.95);border:1px solid var(--line);
+      background:rgba(16,29,48,.50);border:1px solid var(--line);
       border-radius:var(--radius);box-shadow:var(--shadow)
     }
-    .card{padding:16px;min-width:0;grid-column:span 3}
-    .card:nth-child(n+5){grid-column:span 4}
+    .card{padding:16px;min-width:0}
     .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.075em}
     .value{font-size:clamp(22px,2.1vw,27px);font-weight:780;margin-top:5px;white-space:nowrap;line-height:1.05}
     .wind-value-line{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:5px}
@@ -97,23 +115,18 @@
       padding:12px 14px;color:var(--muted);font-size:12px;line-height:1.58;margin:14px 0
     }
     footer{color:var(--muted);font-size:12px;line-height:1.6;padding:4px 2px 30px}
-    @media(max-width:1279px){
-      .cards{grid-template-columns:repeat(6,minmax(0,1fr))}
-      .card,.card:nth-child(n+5){grid-column:span 2}
-      .card:nth-child(7){grid-column:3 / span 2}
-      .days{grid-template-columns:repeat(4,minmax(0,1fr))}
+    @media(max-width:1200px){
+      .cards{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
     }
-    @media(max-width:899px){
-      .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .card,.card:nth-child(n+5),.card:nth-child(7){grid-column:span 1}
-      .card:nth-child(7){grid-column:1 / -1}
+    @media(max-width:960px){
+      .cards{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+      .days{grid-template-columns:repeat(4,minmax(0,1fr))}
     }
     @media(max-width:640px){
       .wrap{padding:12px}
       header{display:block}
       .actions{justify-content:flex-start;margin-top:12px}
       .cards{grid-template-columns:1fr;gap:10px}
-      .card,.card:nth-child(n+5),.card:nth-child(7){grid-column:1}
       .card{padding:12px}
       .value{font-size:23px}
       .wind-value-line{gap:8px}
@@ -127,14 +140,58 @@
       .chart-wrap{height:280px}
       .sub{font-size:13px;line-height:1.4}
     }
+
+    /* Compact, naturally wrapping weather cards. */
+    body{background:var(--bg);position:relative;isolation:isolate;min-height:100vh}
+    body::before{content:"";position:absolute;z-index:-1;pointer-events:none;top:0;left:0;width:100%;height:clamp(480px,66.667vw,960px);background:linear-gradient(to bottom,rgba(8,17,31,.12) 0%,rgba(8,17,31,.16) 35%,rgba(8,17,31,.6) 72%,var(--bg) 100%),url("https://weather.didwell.no/background-aalgard-v1.webp") center top / cover no-repeat}
+    .wrap{padding:18px 20px 20px;position:relative;margin:auto}
+    header{align-items:flex-start;margin:6px 0 14px}
+    h1{font-size:clamp(28px,5vw,48px);line-height:1.02;letter-spacing:-.035em;margin:0}
+    .sub{margin-top:8px;line-height:1.5;max-width:640px}
+    .status{line-height:1.5;margin-bottom:16px}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));align-items:stretch;gap:10px;margin-bottom:20px}
+    .card{min-width:0;padding:14px;display:flex;flex-direction:column;gap:12px;box-shadow:0 6px 20px rgba(0,0,0,.12);background:rgba(16,29,48,.50);border-color:#2b3e57}
+    .temp-value-grid,.metric-grid{gap:12px}
+    .metric{text-align:center}
+    .metric + .metric{border-left:1px solid rgba(159,176,200,.16);padding-left:12px}
+    .label,.temp-value-grid .metric .label,.metric-grid .metric .label{font-size:12px;line-height:1.4;text-transform:none;letter-spacing:0;color:#b5c3d6}
+    .metric > .label{min-height:34px;display:flex;align-items:center;justify-content:center}
+    .value,.temp-value-grid .metric .value,.metric-grid .metric .value{font-size:27px;font-weight:650;letter-spacing:-.035em;line-height:1.2;margin-top:3px;text-align:center;font-variant-numeric:tabular-nums;white-space:normal;overflow-wrap:normal}
+    .unit{font-size:.52em;font-weight:500;color:#aebfd4;letter-spacing:0;white-space:nowrap}
+    .value .reading{white-space:nowrap}
+    #windDirNow{font-size:23px;line-height:1.41}
+    .card > .label{text-align:center}
+    .card > .detail{margin-top:auto;padding-top:10px;border-top:1px solid rgba(159,176,200,.16);text-align:center}
+    .detail{font-size:12px;line-height:1.5;overflow-wrap:normal}
+    .detail-row{display:flex;justify-content:center;align-items:baseline;gap:.35em}
+    .detail-row + .detail-row{margin-top:4px}
+    .detail-row strong{font-weight:500;color:#d4dfec;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .card > #rhNow{margin-top:0}
+    #pressureTrend{font-size:21px;letter-spacing:-.015em;line-height:1.54}
+    .metric > .detail{margin-top:5px;text-wrap:balance}
+    .grid{gap:14px}
+    .panel{padding:18px;border-color:#253951;box-shadow:0 8px 24px rgba(0,0,0,.1)}
+    .panel h2{font-size:18px;margin-bottom:6px;font-weight:650}
+    .panel p{line-height:1.55;max-width:850px;margin-bottom:14px}
+    .section-title{margin-top:20px}
+    button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+    @media(max-width:640px){
+      .wrap{padding:12px 12px 16px;margin:auto}
+      header{display:flex;flex-wrap:wrap;gap:10px}
+      .sub{font-size:12px}
+      .actions{justify-content:flex-start;margin-top:0}
+      .panel{padding:14px 12px}
+    }
+    #temperatureCard,#windCard{cursor:pointer;touch-action:manipulation}
+    #temperatureCard:focus-visible,#windCard:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
   </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div>
-      <h1>Seterbu Værmelding</h1>
-      <div id="locationSub" class="sub">59,70266°N · 6,41297°E · 7 døgn · v1.17 · oppdateres automatisk når siden åpnes</div>
+      <h1>Seterbu - DidWell Weather Services</h1>
+      <div class="sub">59,70266°N · 6,41297°E · 597 moh. · 7 døgn · v1.25 · oppdateres automatisk når siden åpnes</div>
     </div>
     <div class="actions">
       <button id="refreshBtn" type="button">Oppdater</button>
@@ -149,7 +206,7 @@
   <div id="errorBox" class="error"></div>
 
   <section class="cards">
-    <div class="card">
+    <div class="card" id="temperatureCard" role="button" tabindex="0" aria-label="Temperatur i Celsius. Bytt til Fahrenheit" title="Trykk for å bytte mellom °C og °F">
       <div class="temp-value-grid">
         <div class="metric">
           <div class="label">Temperatur nå</div>
@@ -169,13 +226,13 @@
           <div id="precipNow" class="value">–</div>
         </div>
         <div class="metric">
-          <div class="label">Siste 24 timer</div>
-          <div id="precip24h" class="value">–</div>
+          <div class="label">Hittil i dag</div>
+          <div id="precipToday" class="value">–</div>
         </div>
       </div>
       <div id="precipAgreement" class="detail">–</div>
     </div>
-    <div class="card">
+    <div class="card" id="windCard" role="button" tabindex="0" aria-label="Vindstyrke i meter per sekund. Bytt til kilometer i timen" title="Trykk for å bytte mellom m/s og km/t">
       <div class="metric-grid">
         <div class="metric">
           <div class="label">Vind nå</div>
@@ -187,19 +244,6 @@
         </div>
       </div>
       <div id="windSpread" class="detail">–</div>
-    </div>
-    <div class="card">
-      <div class="metric-grid">
-        <div class="metric">
-          <div class="label">Vind nå · km/t</div>
-          <div id="windNowKmh" class="value">–</div>
-        </div>
-        <div class="metric">
-          <div class="label">Vindretning</div>
-          <div id="windDirNowKmh" class="value">–</div>
-        </div>
-      </div>
-      <div id="windSpreadKmh" class="detail">–</div>
     </div>
     <div class="card">
       <div class="label">Luftfuktighet</div>
@@ -219,7 +263,7 @@
       </div>
       <div id="daylightDetail" class="detail">astronomiske tider for Seterbu</div>
     </div>
-    <div class="card">
+    <div class="card pressure-card">
       <div class="metric-grid">
         <div class="metric">
           <div class="label">Lufttrykk</div>
@@ -248,7 +292,7 @@
     </div>
     <div class="panel">
       <h2>Vindstyrke</h2>
-      <p>Vind 10 meter over bakken i m/s. Hvit linje er modellgjennomsnitt.</p>
+      <p id="windDescription">Vind 10 meter over bakken i m/s. Hvit linje er modellgjennomsnitt.</p>
       <div class="chart-wrap"><canvas id="windChart"></canvas></div>
     </div>
     <div class="panel">
@@ -284,6 +328,7 @@
 
   const LAT = '59.702660';
   const LON = '6.412970';
+  const ELEVATION = '597';
   const API = 'https://api.open-meteo.com/v1/forecast';
 
   const MODELS = [
@@ -300,6 +345,75 @@
 
   const COLORS = ['#72b7ff','#ff9f6e','#a58cff','#5cd3aa','#ffd166','#f783ac','#9dd46f','#6ed0e0','#f0a7ff'];
   const charts = [];
+  let temperatureUnit = '°C';
+  let currentTemperatures = null;
+  let windUnit = 'm/s';
+  let currentWind = null;
+  const temperatureValue = value => Number.isFinite(value)
+    ? (temperatureUnit === '°F' ? value * 9 / 5 + 32 : value)
+    : null;
+
+  function renderTemperatureValues(){
+    if(!currentTemperatures) return;
+    const {now,apparent,low,high,dew} = currentTemperatures;
+    $('tempNow').textContent = `${fmt(temperatureValue(now),1)} ${temperatureUnit}`;
+    $('apparentNow').textContent = `${fmt(temperatureValue(apparent),1)} ${temperatureUnit}`;
+    $('tempSpread').textContent =
+      `i dag ${fmt(temperatureValue(low),1)}–${fmt(temperatureValue(high),1)} ${temperatureUnit} · duggpunkt ${fmt(temperatureValue(dew),1)} ${temperatureUnit}`;
+  }
+
+  function toggleTemperatureUnit(){
+    temperatureUnit = temperatureUnit === '°C' ? '°F' : '°C';
+    $('temperatureCard').setAttribute('aria-label',temperatureUnit === '°C'
+      ? 'Temperatur i Celsius. Bytt til Fahrenheit'
+      : 'Temperatur i Fahrenheit. Bytt til Celsius');
+    if(currentTemperatures){
+      renderTemperatureValues();
+      formatSummaryCards('temperatureCard');
+    }
+    const chart = typeof Chart !== 'undefined' ? Chart.getChart('tempChart') : null;
+    if(chart && chart.celsiusDatasets){
+      chart.data.datasets.forEach((dataset,i) => {
+        dataset.data = chart.celsiusDatasets[i].map(temperatureValue);
+      });
+      chart.options = baseOptions(chart.data.labels,temperatureUnit);
+      chart.update('none');
+    }
+  }
+
+  const windValue = value => Number.isFinite(value)
+    ? (windUnit === 'km/t' ? value * 3.6 : value)
+    : null;
+
+  function renderWindValues(){
+    if(!currentWind) return;
+    const {mean,gust,minToday,maxToday,directionText} = currentWind;
+    $('windNow').textContent = `${fmt(windValue(mean),1)} ${windUnit}`;
+    $('windDirNow').textContent = directionText;
+    $('windSpread').textContent =
+      `Vindkast ${fmt(windValue(gust),1)} ${windUnit} · hittil i dag ${fmt(windValue(minToday),1)}–${fmt(windValue(maxToday),1)} ${windUnit}`;
+  }
+
+  function toggleWindUnit(){
+    windUnit = windUnit === 'm/s' ? 'km/t' : 'm/s';
+    $('windCard').setAttribute('aria-label',windUnit === 'm/s'
+      ? 'Vindstyrke i meter per sekund. Bytt til kilometer i timen'
+      : 'Vindstyrke i kilometer i timen. Bytt til meter per sekund');
+    $('windDescription').textContent =
+      `Vind 10 meter over bakken i ${windUnit}. Hvit linje er modellgjennomsnitt.`;
+    if(currentWind){
+      renderWindValues();
+      formatSummaryCards('windCard');
+    }
+    const chart = typeof Chart !== 'undefined' ? Chart.getChart('windChart') : null;
+    if(chart && chart.mpsDatasets){
+      chart.data.datasets.forEach((dataset,i) => {
+        dataset.data = chart.mpsDatasets[i].map(windValue);
+      });
+      chart.options = baseOptions(chart.data.labels,windUnit,0,null);
+      chart.update('none');
+    }
+  }
 
   const $ = id => document.getElementById(id);
   const finite = v => Number.isFinite(v);
@@ -374,6 +488,7 @@
     const params = new URLSearchParams({
       latitude: LAT,
       longitude: LON,
+      elevation: ELEVATION,
       timezone: 'Europe/Oslo',
       forecast_days: '7',
       wind_speed_unit: 'ms',
@@ -455,6 +570,7 @@
     const params = new URLSearchParams({
       latitude: LAT,
       longitude: LON,
+      elevation: ELEVATION,
       timezone: 'Europe/Oslo',
       past_hours: '720',
       forecast_hours: '1',
@@ -470,6 +586,7 @@
     const params = new URLSearchParams({
       latitude: LAT,
       longitude: LON,
+      elevation: ELEVATION,
       timezone: 'Europe/Oslo',
       forecast_days: '1',
       daily: 'sunrise,sunset,daylight_duration,sunshine_duration'
@@ -490,11 +607,6 @@
       $('sunsetNow').textContent = '–';
       $('daylightDetail').textContent = 'soldata utilgjengelig';
       return;
-    }
-
-    const elevation = Number(data.elevation);
-    if(finite(elevation)){
-      $('locationSub').textContent = `59,70266°N · 6,41297°E · ${Math.round(elevation)} moh. · 7 døgn · v1.17 · oppdateres automatisk når siden åpnes`;
     }
 
     const sunrise = data.daily?.sunrise?.[0];
@@ -639,6 +751,7 @@
 
   function tooltipNumber(v,unit){
     if(!finite(v)) return '–';
+    if(unit === '°C' || unit === '°F') return `${v.toFixed(1).replace('.',',')} ${unit}`;
     if(unit === 'grader') return `${Math.round(v)}°`;
     if(unit === 'mm/h') return `${v.toFixed(2).replace('.',',')} mm/h`;
     if(unit === '%') return `${v.toFixed(0)} %`;
@@ -724,11 +837,24 @@
 
   function makeLine(id,times,models,field,unit,minY=null,maxY=null){
     destroyCanvasChart(id);
+    const rawDatasets = datasetsForLine(models,field,times);
+    const isTemperature = id === 'tempChart';
+    const isWind = id === 'windChart';
+    if(isTemperature) unit = temperatureUnit;
+    if(isWind) unit = windUnit;
+    const datasets = rawDatasets.map(dataset => ({
+      ...dataset,
+      data:isTemperature ? dataset.data.map(temperatureValue)
+        : isWind ? dataset.data.map(windValue)
+        : dataset.data
+    }));
     const chart = new Chart($(id),{
       type:'line',
-      data:{labels:times,datasets:datasetsForLine(models,field,times)},
+      data:{labels:times,datasets},
       options:baseOptions(times,unit,minY,maxY)
     });
+    if(isTemperature) chart.celsiusDatasets = rawDatasets.map(dataset => dataset.data.slice());
+    if(isWind) chart.mpsDatasets = rawDatasets.map(dataset => dataset.data.slice());
     charts.push(chart);
   }
 
@@ -810,15 +936,18 @@
       .map(i => mean(valuesAt(models,'wind',i)))
       .filter(finite);
 
-    $('tempNow').textContent = `${fmt(mean(tv),1)} °C`;
-    $('apparentNow').textContent = `${fmt(mean(av),1)} °C`;
-    $('tempSpread').textContent =
-      `i dag ${fmt(minv(todayTempMean),1)}–${fmt(maxv(todayTempMean),1)} °C · duggpunkt ${fmt(mean(dewV),1)} °C`;
+    currentTemperatures = {now:mean(tv),apparent:mean(av),low:minv(todayTempMean),high:maxv(todayTempMean),dew:mean(dewV)};
+    renderTemperatureValues();
 
     $('precipNow').textContent = `${fmt(mean(pv),2)} mm/h`;
 
-    let todayPrecip = null;
-    let precip24h = null;
+    const forecastTodayValues = todayIdx
+      .map(i => mean(valuesAt(models,'precip',i)))
+      .filter(finite);
+    const forecastTodayPrecip = forecastTodayValues.length
+      ? forecastTodayValues.reduce((sum,value) => sum + value,0)
+      : null;
+    let precipToday = null;
     let precip30d = null;
     if(recentHistory && Array.isArray(recentHistory.time) && Array.isArray(recentHistory.precipitation)){
       const hist = recentHistory.time.map((t,i) => ({
@@ -828,15 +957,13 @@
 
       const last720 = hist.slice(-720);
       precip30d = last720.length ? last720.reduce((s,x) => s + x.p, 0) : null;
-      const last24 = hist.slice(-24);
-      precip24h = last24.length ? last24.reduce((s,x) => s + x.p, 0) : null;
       const todayRows = hist.filter(x => x.t.startsWith(today));
-      todayPrecip = todayRows.length ? todayRows.reduce((s,x) => s + x.p, 0) : 0;
+      precipToday = todayRows.length ? todayRows.reduce((s,x) => s + x.p, 0) : null;
     }
 
-    $('precip24h').textContent = `${fmt(precip24h,1)} mm`;
+    $('precipToday').textContent = `${fmt(precipToday,1)} mm`;
     $('precipAgreement').textContent =
-      `i dag hittil ${fmt(todayPrecip,1)} mm · siste 30 døgn ${fmt(precip30d,1)} mm`;
+      `varslet i dag ${fmt(forecastTodayPrecip,1)} mm · siste 30 døgn ${fmt(precip30d,1)} mm`;
 
     const direction = circularMean(dv);
     const directionText = `${cardinal(direction)} ${fmt(direction,0)}°`;
@@ -845,15 +972,8 @@
     const windMinToday = minv(elapsedWindMean);
     const windMaxToday = maxv(elapsedWindMean);
 
-    $('windNow').textContent = `${fmt(windMean,1)} m/s`;
-    $('windDirNow').textContent = directionText;
-    $('windSpread').textContent =
-      `Vindkast ${fmt(gustNow,1)} m/s · hittil i dag ${fmt(windMinToday,1)}–${fmt(windMaxToday,1)} m/s`;
-
-    $('windNowKmh').textContent = `${fmt(finite(windMean) ? windMean*3.6 : null,1)} km/t`;
-    $('windDirNowKmh').textContent = directionText;
-    $('windSpreadKmh').textContent =
-      `Vindkast ${fmt(finite(gustNow) ? gustNow*3.6 : null,1)} km/t · hittil i dag ${fmt(finite(windMinToday) ? windMinToday*3.6 : null,1)}–${fmt(finite(windMaxToday) ? windMaxToday*3.6 : null,1)} km/t`;
+    currentWind = {mean:windMean,gust:gustNow,minToday:windMinToday,maxToday:windMaxToday,directionText};
+    renderWindValues();
 
     const pressureNow = mean(pressv);
     const past12Idx = Math.max(0, idx - 12);
@@ -876,7 +996,7 @@
       $('pressureTrend').innerHTML = `<span class="trend-arrow">${arrow}</span> ${word}`;
       const verb = pressureDelta12 > 0 ? 'steget' : pressureDelta12 < 0 ? 'falt' : 'endret';
       $('pressureDetail').textContent =
-        `${verb} ${fmt(Math.abs(pressureDelta12),1)} mbar siste 12\u00A0t`;
+        `${verb} ${fmt(Math.abs(pressureDelta12),1)} mbar siste 12 t`;
     }else{
       $('pressureTrend').textContent = '–';
       $('pressureDetail').textContent = '–';
@@ -885,6 +1005,44 @@
     $('rhNow').textContent = `${fmt(mean(rv),0)} %`;
     $('rhNow').nextElementSibling.textContent =
       `i dag ${fmt(minv(todayRhMean),0)}–${fmt(maxv(todayRhMean),0)} %`;
+  }
+
+  function formatSummaryCards(cardId=null){
+    const root = cardId ? $(cardId) : document;
+    root.querySelectorAll('.card .value:not(#pressureTrend)').forEach(el => {
+      const text = el.textContent;
+      const match = text.match(/^(.*?) (°C|°F|mm\/h|mm|m\/s|km\/t|%|mbar)$/);
+      if(!match) return;
+      const reading = document.createElement('span');
+      reading.className = 'reading';
+      reading.append(document.createTextNode(match[1] + ' '));
+      const unit = document.createElement('span');
+      unit.className = 'unit';
+      unit.textContent = match[2];
+      reading.append(unit);
+      el.replaceChildren(reading);
+    });
+    const details = ['tempSpread','precipAgreement','windSpread','daylightDetail'];
+    const humidityDetail = $('rhNow').nextElementSibling;
+    const selectedDetails = cardId === 'temperatureCard' ? [$('tempSpread')]
+      : cardId === 'windCard' ? [$('windSpread')]
+      : [...details.map($),humidityDetail];
+    selectedDetails.forEach(el => {
+      const parts = el.textContent.split(' · ');
+      const rows = parts.map(part => {
+        const match = part.match(/^(varslet i dag|siste 30 døgn|hittil i dag|i dag|duggpunkt|vindkast|dagslys|soltimer) (.*)$/i);
+        if(!match) return document.createTextNode(part);
+        const row = document.createElement('div');
+        row.className = 'detail-row';
+        const label = document.createElement('span');
+        label.textContent = `${match[1].charAt(0).toUpperCase() + match[1].slice(1)}:`;
+        const value = document.createElement('strong');
+        value.textContent = match[2];
+        row.append(label,value);
+        return row;
+      });
+      el.replaceChildren(...rows);
+    });
   }
 
   let loadInProgress = false;
@@ -932,6 +1090,7 @@
 
     renderCurrent(times,models,recentHistoryResult.ok ? recentHistoryResult.value : null);
     renderLocalExtras(localExtrasResult.ok ? localExtrasResult.value : null);
+    formatSummaryCards();
     renderModelChips(models,failed,times);
 
     destroyCharts();
@@ -952,15 +1111,31 @@
     const suffix = failed.length ? ` · ${failed.length} modell${failed.length === 1 ? '' : 'er'} utilgjengelig` : '';
     const historySuffix = recentHistoryResult.ok ? '' : ' · nedbørshistorikk utilgjengelig';
     const localSuffix = localExtrasResult.ok ? '' : ' · sol/trykkdata utilgjengelig';
-    setStatus(`Oppdatert med ${models.length} værmodeller${suffix}${historySuffix}${localSuffix}`,'ok');
+    setStatus(`Oppdatert med ${models.length} værmodeller · Trykk på temperatur- eller vindboksen for å endre enhet${suffix}${historySuffix}${localSuffix}`,'ok');
     finishLoad();
   }
+
+  $('temperatureCard').addEventListener('click',toggleTemperatureUnit);
+  $('temperatureCard').addEventListener('keydown',event => {
+    if(event.key === 'Enter' || event.key === ' '){
+      event.preventDefault();
+      toggleTemperatureUnit();
+    }
+  });
+
+  $('windCard').addEventListener('click',toggleWindUnit);
+  $('windCard').addEventListener('keydown',event => {
+    if(event.key === 'Enter' || event.key === ' '){
+      event.preventDefault();
+      toggleWindUnit();
+    }
+  });
 
   $('refreshBtn').addEventListener('click', load);
   $('shareBtn').addEventListener('click', async () => {
     try{
       if(navigator.share){
-        await navigator.share({title:'Seterbu Værmelding',text:'Oppdatert multimodell-værvarsel for Seterbu',url:location.href});
+        await navigator.share({title:'Seterbu - DidWell Weather Services',text:'Oppdatert multimodell-værvarsel for Seterbu',url:location.href});
       }else{
         await navigator.clipboard.writeText(location.href);
         const old = $('shareBtn').textContent;
