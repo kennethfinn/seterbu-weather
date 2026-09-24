@@ -199,7 +199,7 @@
   <header>
     <div>
       <h1>Seterbu Værmelding</h1>
-      <div class="sub">59,70266°N · 6,41297°E · 597 moh. · 7 døgn · v1.31 · oppdateres automatisk når siden åpnes</div>
+      <div class="sub">59,70266°N · 6,41297°E · 597 moh. · 7 døgn · v1.32 · oppdateres automatisk når siden åpnes</div>
     </div>
     <div class="actions">
       <button id="refreshBtn" type="button">Oppdater</button>
@@ -823,6 +823,14 @@
       plugins:{
         legend:{
           display:true,
+          onClick:(event,item,legend)=>{
+            if(item.text !== 'Sola snitt') return;
+            const chart=legend.chart;
+            chart.setDatasetVisibility(item.datasetIndex,!chart.isDatasetVisible(item.datasetIndex));
+            chart.update();
+          },
+          onHover:(event,item)=>{event.native.target.style.cursor=item.text==='Sola snitt'?'pointer':'default';},
+          onLeave:event=>{event.native.target.style.cursor='default';},
           labels:{
             color:'#dbe5f2',
             usePointStyle:true,
@@ -885,7 +893,7 @@
         pointRadius:0,borderWidth:2.5,tension:.14,spanGaps:true
       },
       {
-        label:'Sola snitt',data:solaAvg,borderColor:SOLA_COLOR,backgroundColor:SOLA_COLOR,tooltipColor:SOLA_COLOR,
+        label:'Sola snitt',data:solaAvg,hidden:false,borderColor:SOLA_COLOR,backgroundColor:SOLA_COLOR,tooltipColor:SOLA_COLOR,
         pointRadius:0,borderWidth:2.5,tension:.14,spanGaps:true
       }
     ];
@@ -923,7 +931,7 @@
       borderColor:'#ffffff',backgroundColor:'#ffffff',tooltipColor:'#ffffff',
       pointRadius:0,borderWidth:2.5,tension:.14,spanGaps:true
     },{
-      type:'line',label:'Sola snitt',data:solaAvg,
+      type:'line',label:'Sola snitt',data:solaAvg,hidden:false,
       borderColor:SOLA_COLOR,backgroundColor:SOLA_COLOR,tooltipColor:SOLA_COLOR,
       pointRadius:0,borderWidth:2.5,tension:.14,spanGaps:true
     }];
@@ -942,7 +950,7 @@
       label:'Seterbu snitt',data:avg,borderColor:'#ffffff',backgroundColor:'#ffffff',tooltipColor:'#ffffff',
       pointRadius:0,borderWidth:2,tension:.08,spanGaps:true
     },{
-      label:'Sola snitt',data:solaAvg,borderColor:SOLA_COLOR,backgroundColor:SOLA_COLOR,tooltipColor:SOLA_COLOR,
+      label:'Sola snitt',data:solaAvg,hidden:false,borderColor:SOLA_COLOR,backgroundColor:SOLA_COLOR,tooltipColor:SOLA_COLOR,
       pointRadius:0,borderWidth:2,tension:.08,spanGaps:true
     }];
     const options = baseOptions(times,'grader',0,360);
