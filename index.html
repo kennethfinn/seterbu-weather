@@ -199,7 +199,7 @@
   <header>
     <div>
       <h1>Seterbu Værmelding</h1>
-      <div class="sub">59,70266°N · 6,41297°E · 597 moh. · 7 døgn · v1.29 · oppdateres automatisk når siden åpnes</div>
+      <div class="sub">59,70266°N · 6,41297°E · 597 moh. · 7 døgn · v1.30 · oppdateres automatisk når siden åpnes</div>
     </div>
     <div class="actions">
       <button id="refreshBtn" type="button">Oppdater</button>
@@ -308,32 +308,32 @@
   <section class="grid">
     <div class="panel">
       <h2>Temperatur</h2>
-      <p>Tynne linjer er enkeltmodeller. Hvit linje er modellgjennomsnitt. Det transparente feltet viser min–maks-spredningen mellom tilgjengelige modeller.</p>
+      <p>Modellgjennomsnitt for Seterbu sammenlignet med Sola lufthavn. Hvit linje er Seterbu, oransje linje er Sola.</p>
       <div class="chart-wrap"><canvas id="tempChart"></canvas></div>
     </div>
     <div class="panel">
       <h2>Nedbør</h2>
-      <p>Timesnedbør fra hver modell. Søylene viser modellgjennomsnittet. Uenighet mellom linjene betyr usikkerhet i timing eller intensitet.</p>
+      <p>Modellgjennomsnitt for timesnedbør. Blå søyler er Seterbu, oransje linje er Sola lufthavn.</p>
       <div class="chart-wrap"><canvas id="precipChart"></canvas></div>
     </div>
     <div class="panel">
       <h2>Vindstyrke</h2>
-      <p id="windDescription">Vind 10 meter over bakken i m/s. Hvit linje er modellgjennomsnitt.</p>
+      <p id="windDescription">Vind 10 meter over bakken i m/s. Hvit linje er Seterbu-snitt, oransje linje er Sola-snitt.</p>
       <div class="chart-wrap"><canvas id="windChart"></canvas></div>
     </div>
     <div class="panel">
       <h2>Vindretning</h2>
-      <p>0°/360° = nord, 90° = øst, 180° = sør og 270° = vest. Vindretning er mindre meningsfull ved svært svak vind.</p>
+      <p>Sirkulært modellgjennomsnitt for Seterbu og Sola lufthavn. 0°/360° = nord, 90° = øst, 180° = sør og 270° = vest.</p>
       <div class="chart-wrap"><canvas id="dirChart"></canvas></div>
     </div>
     <div class="panel">
       <h2>Relativ luftfuktighet</h2>
-      <p>Prosent relativ luftfuktighet fra tilgjengelige modeller.</p>
+      <p>Modellgjennomsnitt for relativ luftfuktighet ved Seterbu og Sola lufthavn.</p>
       <div class="chart-wrap"><canvas id="rhChart"></canvas></div>
     </div>
     <div class="panel">
       <h2>Lufttrykk</h2>
-      <p>Havnivåtrykk fra tilgjengelige modeller. Hvit linje er modellgjennomsnitt.</p>
+      <p>Modellgjennomsnitt for havnivåtrykk ved Seterbu og Sola lufthavn.</p>
       <div class="chart-wrap"><canvas id="pressureChart"></canvas></div>
     </div>
   </section>
@@ -355,7 +355,9 @@
   const LAT = '59.702660';
   const LON = '6.412970';
   const ELEVATION = '597';
+  const SOLA = {latitude:'58.876701',longitude:'5.637780',elevation:'9'};
   const API = 'https://api.open-meteo.com/v1/forecast';
+  const SOLA_COLOR = '#ffad5c';
 
   const MODELS = [
     {id:'ecmwf_ifs', name:'ECMWF IFS HRES 9 km', short:'ECMWF'},
@@ -426,7 +428,7 @@
       ? 'Vindstyrke i meter per sekund. Bytt til kilometer i timen'
       : 'Vindstyrke i kilometer i timen. Bytt til meter per sekund');
     $('windDescription').textContent =
-      `Vind 10 meter over bakken i ${windUnit}. Hvit linje er modellgjennomsnitt.`;
+      `Vind 10 meter over bakken i ${windUnit}. Hvit linje er Seterbu-snitt, oransje linje er Sola-snitt.`;
     if(currentWind){
       renderWindValues();
       formatSummaryCards('windCard');
@@ -510,11 +512,11 @@
     return Object.keys(hourly || {}).find(k => k.startsWith(base + '_') && Array.isArray(hourly[k])) || null;
   }
 
-  async function fetchModel(spec){
+  async function fetchModel(spec,location={latitude:LAT,longitude:LON,elevation:ELEVATION}){
     const params = new URLSearchParams({
-      latitude: LAT,
-      longitude: LON,
-      elevation: ELEVATION,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      elevation: location.elevation,
       timezone: 'Europe/Oslo',
       forecast_days: '7',
       wind_speed_unit: 'ms',
@@ -554,8 +556,8 @@
     };
   }
 
-  function alignModels(models){
-    const master = [...new Set(models.flatMap(m => m.times || []))].sort();
+  function alignModels(models,masterTimes=null){
+    const master = masterTimes || [...new Set(models.flatMap(m => m.times || []))].sort();
     return {
       times: master,
       models: models.map(m => {
@@ -806,6 +808,7 @@
     if(unit === 'mm/h') return `${v.toFixed(2).replace('.',',')} mm/h`;
     if(unit === '%') return `${v.toFixed(0)} %`;
     if(unit === 'm/s') return `${v.toFixed(1).replace('.',',')} m/s`;
+    if(unit === 'km/t') return `${v.toFixed(1).replace('.',',')} km/t`;
     if(unit === 'mbar') return `${v.toFixed(1).replace('.',',')} mbar`;
     return `${v.toFixed(1).replace('.',',')} °C`;
   }
@@ -818,10 +821,19 @@
       animation:false,
       interaction:{mode:'index',intersect:false},
       plugins:{
-        legend:{display:false},
+        legend:{
+          display:true,
+          labels:{
+            color:'#dbe5f2',
+            usePointStyle:true,
+            pointStyle:'line',
+            boxWidth:24,
+            filter:item => item.text === 'Seterbu snitt' || item.text === 'Sola snitt'
+          }
+        },
         tooltip:{
           displayColors:true,
-          filter: context => context.dataset.label === 'Modellgjennomsnitt' || context.dataset.label === 'Sirkulært gjennomsnitt',
+          filter: context => context.dataset.label === 'Seterbu snitt' || context.dataset.label === 'Sola snitt',
           boxWidth:11,
           boxHeight:11,
           boxPadding:4,
@@ -861,34 +873,27 @@
     };
   }
 
-  function datasetsForLine(models,field,times){
-    const lo=[], hi=[], avg=[];
+  function datasetsForLine(models,solaModels,field,times){
+    const avg=[], solaAvg=[];
     for(let i=0;i<times.length;i++){
-      const v = valuesAt(models,field,i);
-      lo.push(minv(v)); hi.push(maxv(v)); avg.push(mean(v));
+      avg.push(mean(valuesAt(models,field,i)));
+      solaAvg.push(mean(valuesAt(solaModels,field,i)));
     }
-    const ds = [
-      {label:'Minimum',data:lo,borderColor:'rgba(120,186,255,.16)',backgroundColor:'rgba(120,186,255,.11)',tooltipColor:'#78baff',pointRadius:0,borderWidth:1,spanGaps:true},
-      {label:'Maksimum',data:hi,borderColor:'rgba(120,186,255,.16)',backgroundColor:'rgba(120,186,255,.11)',tooltipColor:'#78baff',pointRadius:0,borderWidth:1,fill:'-1',spanGaps:true}
+    return [
+      {
+        label:'Seterbu snitt',data:avg,borderColor:'#ffffff',backgroundColor:'#ffffff',tooltipColor:'#ffffff',
+        pointRadius:0,borderWidth:2.5,tension:.14,spanGaps:true
+      },
+      {
+        label:'Sola snitt',data:solaAvg,borderColor:SOLA_COLOR,backgroundColor:SOLA_COLOR,tooltipColor:SOLA_COLOR,
+        pointRadius:0,borderWidth:2.5,tension:.14,spanGaps:true
+      }
     ];
-    models.forEach((m,i) => ds.push({
-      label:m.name,
-      data:m[field],
-      borderColor:modelColor(i,.60),
-      backgroundColor:modelColor(i,1),
-      tooltipColor:modelColor(i,1),
-      pointRadius:0,borderWidth:1.05,tension:.14,spanGaps:false
-    }));
-    ds.push({
-      label:'Modellgjennomsnitt',data:avg,borderColor:'#ffffff',backgroundColor:'#ffffff',tooltipColor:'#ffffff',
-      pointRadius:0,borderWidth:2.5,tension:.14,spanGaps:true
-    });
-    return ds;
   }
 
-  function makeLine(id,times,models,field,unit,minY=null,maxY=null){
+  function makeLine(id,times,models,solaModels,field,unit,minY=null,maxY=null){
     destroyCanvasChart(id);
-    const rawDatasets = datasetsForLine(models,field,times);
+    const rawDatasets = datasetsForLine(models,solaModels,field,times);
     const isTemperature = id === 'tempChart';
     const isWind = id === 'windChart';
     if(isTemperature) unit = temperatureUnit;
@@ -909,21 +914,19 @@
     charts.push(chart);
   }
 
-  function makePrecip(times,models){
+  function makePrecip(times,models,solaModels){
     destroyCanvasChart('precipChart');
     const avg = times.map((_,i) => mean(valuesAt(models,'precip',i)));
-    const ds = models.map((m,i) => ({
-      type:'line',label:m.name,data:m.precip,
-      borderColor:modelColor(i,.58),
-      backgroundColor:modelColor(i,1),
-      tooltipColor:modelColor(i,1),
-      pointRadius:0,borderWidth:1,tension:.08,spanGaps:false
-    }));
-    ds.push({
-      type:'bar',label:'Modellgjennomsnitt',data:avg,
+    const solaAvg = times.map((_,i) => mean(valuesAt(solaModels,'precip',i)));
+    const ds = [{
+      type:'bar',label:'Seterbu snitt',data:avg,
       backgroundColor:'rgba(120,186,255,.72)',borderColor:'#78baff',tooltipColor:'#78baff',
       borderWidth:0,barPercentage:1,categoryPercentage:1
-    });
+    },{
+      type:'line',label:'Sola snitt',data:solaAvg,
+      borderColor:SOLA_COLOR,backgroundColor:SOLA_COLOR,tooltipColor:SOLA_COLOR,
+      pointRadius:0,borderWidth:2.25,tension:.08,spanGaps:true
+    }];
     const chart = new Chart($('precipChart'),{
       data:{labels:times,datasets:ds},
       options:baseOptions(times,'mm/h',0,null)
@@ -931,18 +934,17 @@
     charts.push(chart);
   }
 
-  function makeDirection(times,models){
+  function makeDirection(times,models,solaModels){
     destroyCanvasChart('dirChart');
     const avg = times.map((_,i) => circularMean(valuesAt(models,'dir',i)));
-    const ds = models.map((m,i) => ({
-      label:m.name,data:m.dir,showLine:false,
-      borderColor:modelColor(i,.60),backgroundColor:modelColor(i,1),tooltipColor:modelColor(i,1),
-      pointRadius:1.7,pointHoverRadius:4,spanGaps:false
-    }));
-    ds.push({
-      label:'Sirkulært gjennomsnitt',data:avg,borderColor:'#ffffff',backgroundColor:'#ffffff',tooltipColor:'#ffffff',
+    const solaAvg = times.map((_,i) => circularMean(valuesAt(solaModels,'dir',i)));
+    const ds = [{
+      label:'Seterbu snitt',data:avg,borderColor:'#ffffff',backgroundColor:'#ffffff',tooltipColor:'#ffffff',
       pointRadius:0,borderWidth:2,tension:.08,spanGaps:true
-    });
+    },{
+      label:'Sola snitt',data:solaAvg,borderColor:SOLA_COLOR,backgroundColor:SOLA_COLOR,tooltipColor:SOLA_COLOR,
+      pointRadius:0,borderWidth:2,tension:.08,spanGaps:true
+    }];
     const options = baseOptions(times,'grader',0,360);
     options.scales.y.ticks.stepSize = 90;
     options.scales.y.ticks.callback = v => ({0:'N',90:'Ø',180:'S',270:'V',360:'N'}[v] ?? `${v}°`);
@@ -1131,18 +1133,23 @@
       return;
     }
 
-    const [results,recentHistoryResult,localExtrasResult,alertsResult]=await Promise.all([
-      Promise.allSettled(MODELS.map(fetchModel)),
+    const [results,solaResults,recentHistoryResult,localExtrasResult,alertsResult]=await Promise.all([
+      Promise.allSettled(MODELS.map(spec => fetchModel(spec))),
+      Promise.allSettled(MODELS.map(spec => fetchModel(spec,SOLA))),
       fetchRecentHistory().then(value=>({ok:true,value})).catch(error=>({ok:false,error})),
       fetchLocalExtras().then(value=>({ok:true,value})).catch(error=>({ok:false,error})),
       fetchAlerts().then(value=>({ok:true,value})).catch(error=>({ok:false,error}))
     ]);
     const ok = [];
     const failed = [];
+    const solaOk = [];
 
     results.forEach((r,i) => {
       if(r.status === 'fulfilled') ok.push(r.value);
       else failed.push({spec:MODELS[i],error:r.reason?.message || 'ukjent feil'});
+    });
+    solaResults.forEach(r => {
+      if(r.status === 'fulfilled') solaOk.push(r.value);
     });
 
     if(ok.length < 2){
@@ -1150,10 +1157,16 @@
       finishLoad();
       return;
     }
+    if(solaOk.length < 2){
+      showError(`Bare ${solaOk.length} modell for Sola kunne lastes. Sammenligningen trenger minst to. Prøv igjen senere.`);
+      finishLoad();
+      return;
+    }
 
     const aligned = alignModels(ok);
     const times = aligned.times;
     const models = aligned.models;
+    const solaModels = alignModels(solaOk,times).models;
 
     renderLocalExtras(localExtrasResult.ok?localExtrasResult.value:null);
     renderCurrent(times,models,recentHistoryResult.ok?recentHistoryResult.value:null);
@@ -1163,12 +1176,12 @@
 
     destroyCharts();
     try{
-      makeLine('tempChart',times,models,'temp','°C');
-      makePrecip(times,models);
-      makeLine('windChart',times,models,'wind','m/s',0,null);
-      makeDirection(times,models);
-      makeLine('rhChart',times,models,'rh','%',0,100);
-      makeLine('pressureChart',times,models,'pressure','mbar');
+      makeLine('tempChart',times,models,solaModels,'temp','°C');
+      makePrecip(times,models,solaModels);
+      makeLine('windChart',times,models,solaModels,'wind','m/s',0,null);
+      makeDirection(times,models,solaModels);
+      makeLine('rhChart',times,models,solaModels,'rh','%',0,100);
+      makeLine('pressureChart',times,models,solaModels,'pressure','mbar');
     }catch(e){
       console.error(e);
       showError(`Dataene er lastet, men grafene kunne ikke tegnes: ${e.message}`);
@@ -1180,7 +1193,7 @@
     const historySuffix = recentHistoryResult.ok ? '' : ' · nedbørshistorikk utilgjengelig';
     const localSuffix=localExtrasResult.ok?'':' · lokale tilleggsdata utilgjengelige';
     const alertSuffix=alertsResult.ok?'':' · farevarsler utilgjengelige';
-    setStatus(`Oppdatert med ${models.length} værmodeller · Trykk på temperatur- eller vindboksen for å endre enhet${suffix}${historySuffix}${localSuffix}${alertSuffix}`,'ok');
+    setStatus(`Oppdatert med ${models.length} modeller for Seterbu og ${solaModels.length} for Sola · Trykk på temperatur- eller vindboksen for å endre enhet${suffix}${historySuffix}${localSuffix}${alertSuffix}`,'ok');
     finishLoad();
   }
 
