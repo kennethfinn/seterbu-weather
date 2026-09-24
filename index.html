@@ -199,7 +199,7 @@
   <header>
     <div>
       <h1>Seterbu Værmelding</h1>
-      <div class="sub">59,70266°N · 6,41297°E · 597 moh. · 7 døgn · v1.30 · oppdateres automatisk når siden åpnes</div>
+      <div class="sub">59,70266°N · 6,41297°E · 597 moh. · 7 døgn · v1.31 · oppdateres automatisk når siden åpnes</div>
     </div>
     <div class="actions">
       <button id="refreshBtn" type="button">Oppdater</button>
@@ -313,7 +313,7 @@
     </div>
     <div class="panel">
       <h2>Nedbør</h2>
-      <p>Modellgjennomsnitt for timesnedbør. Blå søyler er Seterbu, oransje linje er Sola lufthavn.</p>
+      <p>Modellgjennomsnitt for timesnedbør. Hvit linje er Seterbu, oransje linje er Sola lufthavn.</p>
       <div class="chart-wrap"><canvas id="precipChart"></canvas></div>
     </div>
     <div class="panel">
@@ -919,13 +919,13 @@
     const avg = times.map((_,i) => mean(valuesAt(models,'precip',i)));
     const solaAvg = times.map((_,i) => mean(valuesAt(solaModels,'precip',i)));
     const ds = [{
-      type:'bar',label:'Seterbu snitt',data:avg,
-      backgroundColor:'rgba(120,186,255,.72)',borderColor:'#78baff',tooltipColor:'#78baff',
-      borderWidth:0,barPercentage:1,categoryPercentage:1
+      type:'line',label:'Seterbu snitt',data:avg,
+      borderColor:'#ffffff',backgroundColor:'#ffffff',tooltipColor:'#ffffff',
+      pointRadius:0,borderWidth:2.5,tension:.14,spanGaps:true
     },{
       type:'line',label:'Sola snitt',data:solaAvg,
       borderColor:SOLA_COLOR,backgroundColor:SOLA_COLOR,tooltipColor:SOLA_COLOR,
-      pointRadius:0,borderWidth:2.25,tension:.08,spanGaps:true
+      pointRadius:0,borderWidth:2.5,tension:.14,spanGaps:true
     }];
     const chart = new Chart($('precipChart'),{
       data:{labels:times,datasets:ds},
