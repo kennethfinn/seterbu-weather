@@ -199,7 +199,7 @@
   <header>
     <div>
       <h1>Seterbu Værmelding</h1>
-      <div class="sub">59,70266°N · 6,41297°E · 597 moh. · 7 døgn · v1.32 · oppdateres automatisk når siden åpnes</div>
+      <div class="sub">59,70266°N · 6,41297°E · 597 moh. · 7 døgn · v1.33 · oppdateres automatisk når siden åpnes</div>
     </div>
     <div class="actions">
       <button id="refreshBtn" type="button">Oppdater</button>
@@ -554,6 +554,41 @@
       dir: dirKey ? hourly[dirKey] : [],
       gust: gustKey ? hourly[gustKey] : []
     };
+  }
+
+  async function fetchModelPair(spec){
+    const params = new URLSearchParams({
+      latitude: `${LAT},${SOLA.latitude}`,
+      longitude: `${LON},${SOLA.longitude}`,
+      elevation: `${ELEVATION},${SOLA.elevation}`,
+      timezone: 'Europe/Oslo', forecast_days: '7', wind_speed_unit: 'ms',
+      hourly: 'temperature_2m,apparent_temperature,dew_point_2m,relative_humidity_2m,precipitation,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m',
+      models: spec.id
+    });
+    const res = await fetch(`${API}?${params.toString()}`, {cache:'no-store'});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const payload = await res.json();
+    if(!Array.isArray(payload) || payload.length < 2) throw new Error('mangler lokasjonsdata');
+    const parse = data => {
+      const hourly=data.hourly||{};
+      const field=base=>{const key=keyFor(hourly,base,spec.id); return key?hourly[key]:[];};
+      if(!Array.isArray(hourly.time) || !keyFor(hourly,'temperature_2m',spec.id)) throw new Error('mangler timesdata');
+      return {...spec,times:hourly.time,temp:field('temperature_2m'),apparent:field('apparent_temperature'),dew:field('dew_point_2m'),rh:field('relative_humidity_2m'),precip:field('precipitation'),pressure:field('pressure_msl'),wind:field('wind_speed_10m'),dir:field('wind_direction_10m'),gust:field('wind_gusts_10m')};
+    };
+    return [parse(payload[0]),parse(payload[1])];
+  }
+
+  async function settleWithLimit(tasks,limit=2){
+    const results=new Array(tasks.length); let next=0;
+    async function worker(){
+      while(next<tasks.length){
+        const i=next++;
+        try{results[i]={status:'fulfilled',value:await tasks[i]()};}
+        catch(reason){results[i]={status:'rejected',reason};}
+      }
+    }
+    await Promise.all(Array.from({length:Math.min(limit,tasks.length)},worker));
+    return results;
   }
 
   function alignModels(models,masterTimes=null){
@@ -1141,9 +1176,8 @@
       return;
     }
 
-    const [results,solaResults,recentHistoryResult,localExtrasResult,alertsResult]=await Promise.all([
-      Promise.allSettled(MODELS.map(spec => fetchModel(spec))),
-      Promise.allSettled(MODELS.map(spec => fetchModel(spec,SOLA))),
+    const [pairedResults,recentHistoryResult,localExtrasResult,alertsResult]=await Promise.all([
+      settleWithLimit(MODELS.map(spec => () => fetchModelPair(spec))),
       fetchRecentHistory().then(value=>({ok:true,value})).catch(error=>({ok:false,error})),
       fetchLocalExtras().then(value=>({ok:true,value})).catch(error=>({ok:false,error})),
       fetchAlerts().then(value=>({ok:true,value})).catch(error=>({ok:false,error}))
@@ -1152,12 +1186,12 @@
     const failed = [];
     const solaOk = [];
 
-    results.forEach((r,i) => {
-      if(r.status === 'fulfilled') ok.push(r.value);
+    pairedResults.forEach((r,i) => {
+      if(r.status === 'fulfilled'){
+        ok.push(r.value[0]);
+        solaOk.push(r.value[1]);
+      }
       else failed.push({spec:MODELS[i],error:r.reason?.message || 'ukjent feil'});
-    });
-    solaResults.forEach(r => {
-      if(r.status === 'fulfilled') solaOk.push(r.value);
     });
 
     if(ok.length < 2){
